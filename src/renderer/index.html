@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="Content-Security-Policy"
+        content="default-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:" />
+  <title>FindAnything</title>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <!-- ======================= Permission Modal (first launch) ======================= -->
+  <div id="permission-overlay" class="overlay hidden">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="perm-title">
+      <div class="modal-logo">
+        <svg viewBox="0 0 64 64" width="56" height="56" aria-hidden="true">
+          <circle cx="28" cy="28" r="16" fill="none" stroke="#1a73e8" stroke-width="5"/>
+          <line x1="40" y1="40" x2="56" y2="56" stroke="#1a73e8" stroke-width="6" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <h1 id="perm-title">Welcome to FindAnything</h1>
+      <p class="modal-text">
+        FindAnything indexes the files on <strong>this computer only</strong> so you can
+        search their <em>names and entire contents</em> instantly — just like the classic
+        Google Desktop, rebuilt for modern Windows and macOS.
+      </p>
+      <p class="modal-text">
+        To do this, FindAnything needs your explicit permission to read the folders you
+        choose. Nothing is ever uploaded: the index database, extracted text and all
+        settings remain strictly on your local machine.
+      </p>
+      <ul class="modal-list">
+        <li>Deep-content indexing of TXT, MD, CSV, PDF, DOCX and XLSX files</li>
+        <li>You pick exactly which folders or drives are crawled</li>
+        <li>System folders are excluded by default and can be managed anytime</li>
+      </ul>
+      <div class="modal-actions">
+        <button id="btn-grant" class="btn btn-primary">Allow &amp; Choose Folders</button>
+        <button id="btn-deny" class="btn btn-secondary">Not Now</button>
+      </div>
+      <p id="perm-denied-note" class="modal-note hidden">
+        FindAnything will not scan anything until you grant permission. You can change
+        this later from the Settings panel.
+      </p>
+    </div>
+  </div>
+
+  <!-- ======================= Main Application Shell ======================= -->
+  <div id="app" class="app hidden">
+    <header class="header">
+      <div class="brand">
+        <svg viewBox="0 0 64 64" width="30" height="30" aria-hidden="true">
+          <circle cx="28" cy="28" r="16" fill="none" stroke="#1a73e8" stroke-width="5"/>
+          <line x1="40" y1="40" x2="56" y2="56" stroke="#1a73e8" stroke-width="6" stroke-linecap="round"/>
+        </svg>
+        <span class="brand-name">Find<span class="brand-accent">Anything</span></span>
+      </div>
+      <div class="search-box">
+        <input
+          id="search-input"
+          type="text"
+          autocomplete="off"
+          spellcheck="false"
+          placeholder="Search file names and everything inside your documents…"
+          aria-label="Search files" />
+        <button id="btn-clear" class="clear-btn hidden" title="Clear search" aria-label="Clear search">&times;</button>
+      </div>
+      <div class="header-actions">
+        <span id="throttle-badge" class="throttle-badge hidden" title="Indexer paused to keep your computer fast">Paused</span>
+        <button id="btn-settings" class="icon-btn" title="Settings" aria-label="Settings">&#9881;</button>
+      </div>
+    </header>
+
+    <div class="status-bar">
+      <span id="result-stats" class="result-stats"></span>
+      <span id="index-stats" class="index-stats"></span>
+    </div>
+
+    <main id="results" class="results" aria-live="polite">
+      <div id="empty-state" class="empty-state">
+        <svg viewBox="0 0 64 64" width="72" height="72" aria-hidden="true">
+          <circle cx="28" cy="28" r="16" fill="none" stroke="#dadce0" stroke-width="5"/>
+          <line x1="40" y1="40" x2="56" y2="56" stroke="#dadce0" stroke-width="6" stroke-linecap="round"/>
+        </svg>
+        <p>Type above to instantly search everything FindAnything has indexed.</p>
+      </div>
+    </main>
+
+    <!-- ======================= Settings Panel ======================= -->
+    <div id="settings-overlay" class="overlay hidden">
+      <div class="modal modal-wide" role="dialog" aria-modal="true" aria-labelledby="settings-title">
+        <h2 id="settings-title">Settings</h2>
+
+        <section class="settings-section">
+          <h3>Indexed folders</h3>
+          <p class="settings-hint">FindAnything crawls these folders and keeps them up to date in real time.</p>
+          <ul id="include-list" class="dir-list"></ul>
+          <button id="btn-add-include" class="btn btn-secondary">+ Add folder…</button>
+        </section>
+
+        <section class="settings-section">
+          <h3>Excluded folders</h3>
+          <p class="settings-hint">These folders are never crawled (system folders are excluded by default).</p>
+          <ul id="exclude-list" class="dir-list"></ul>
+          <button id="btn-add-exclude" class="btn btn-secondary">+ Exclude folder…</button>
+        </section>
+
+        <section class="settings-section">
+          <h3>Index</h3>
+          <div id="settings-stats" class="settings-stats"></div>
+          <div class="modal-actions left">
+            <button id="btn-pause-index" class="btn btn-secondary">Pause indexing</button>
+            <button id="btn-resume-index" class="btn btn-secondary">Resume indexing</button>
+            <button id="btn-rebuild" class="btn btn-danger">Rebuild index</button>
+          </div>
+        </section>
+
+        <div class="modal-actions">
+          <button id="btn-close-settings" class="btn btn-primary">Done</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/renderer.js"></script>
+</body>
+</html>
