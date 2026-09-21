@@ -9,9 +9,10 @@
  *  - CPU pressure: 1-minute load average normalized by core count.
  *    Above the high-water mark the indexer pauses; it resumes below the
  *    low-water mark (hysteresis prevents flapping).
- *  - User activity: Electron's powerMonitor system idle time. If the user
- *    has touched keyboard/mouse within the activity window, indexing drops
- *    to a paused/low-priority state.
+ *  - User activity: Electron's powerMonitor system idle time is observed for
+ *    telemetry, but does not block indexing. A desktop search tool must build
+ *    its initial index while the user is using the computer; otherwise a
+ *    first-launch search can remain empty until the user walks away.
  *
  * The monitor polls on a light interval and emits state changes through a
  * callback so the indexer and the UI badge stay in sync.
@@ -23,8 +24,8 @@ const DEFAULTS = {
   pollIntervalMs: 3000,
   cpuHighWater: 0.55, // pause when normalized load avg exceeds this
   cpuLowWater: 0.35, // resume when it falls back below this
-  // User considered active if idle < 3 minutes. FA_USER_ACTIVE_IDLE_SEC
-  // overrides this (used by headless tests where X idle time is always 0).
+  // Retained as a telemetry threshold for compatibility and future adaptive
+  // scheduling. User activity is deliberately not a hard pause condition.
   userActiveIdleSec: process.env.FA_USER_ACTIVE_IDLE_SEC
     ? Number(process.env.FA_USER_ACTIVE_IDLE_SEC)
     : 180
@@ -96,14 +97,16 @@ class ThrottleMonitor {
     if (this._manualPause) {
       this.state = 'paused';
     } else if (this.state === 'running') {
-      if (cpu > this.opts.cpuHighWater || userActive) {
+      // CPU pressure is a hard pause condition. Do not pause merely because
+      // the user is active: on a normal first launch the user is necessarily
+      // active while waiting for the index to be created.
+      if (cpu > this.opts.cpuHighWater) {
         this.state = 'paused';
       }
     } else {
-      // Paused: resume when the machine is calm and the user is idle.
-      // cpu < lowWater is always required; the user-activity condition
-      // releases as soon as input stops (idle time grows past the window).
-      if (cpu < this.opts.cpuLowWater && !userActive) {
+      // Paused: resume as soon as CPU pressure is low. User activity does not
+      // prevent recovery, for the same first-launch reason described above.
+      if (cpu < this.opts.cpuLowWater) {
         this.state = 'running';
       }
     }
