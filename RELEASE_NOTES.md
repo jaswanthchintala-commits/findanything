@@ -1,4 +1,4 @@
-# FindAnything v1.0.1
+# FindAnything v1.1.0
 
 FindAnything is a modern desktop indexing and search application inspired by the classic Google Desktop experience. It indexes file names and deep document content locally so users can search their own files instantly.
 
@@ -6,27 +6,32 @@ FindAnything is a modern desktop indexing and search application inspired by the
 
 | Platform | File |
 |---|---|
-| Windows 10/11 x64 | `FindAnything-Setup-1.0.0-x64.exe` |
-| macOS Intel | `FindAnything-1.0.0-x64.zip` |
-| macOS Apple Silicon | `FindAnything-1.0.0-arm64.zip` |
+| Windows 10/11 x64 | `FindAnything-Setup-1.1.0-x64.exe` |
+| macOS Intel | `FindAnything-1.1.0-x64.zip` |
+| macOS Apple Silicon | `FindAnything-1.1.0-arm64.zip` |
 
 ## Included in this release
 
 - Fixed an indexing deadlock where normal keyboard/mouse activity paused the initial crawl indefinitely, leaving the search index empty for active users
+- Fixed punctuation-normalized search so queries such as `variable-cycle engine` match document content correctly
+- Added deep extraction for PPTX, HTML, XML, JSON, logs, and common source/configuration files
+- Added visible counts for files indexed and files containing searchable text
+- Added a cross-platform PowerPoint Open XML extractor using JSZip
+- Added production regression coverage for real deep-content queries and the Electron UI flow
 
 - Instant local search with a lightweight debounced search box
-- Deep-content indexing for TXT, Markdown, CSV, PDF, DOCX, and XLSX files
+- Deep-content indexing for TXT, Markdown, CSV, PDF, DOCX, XLSX, PPTX, HTML/XML/JSON, and common source files
 - Google Desktop-style result layout with clickable file titles, highlighted snippets, and metadata subscripts
 - Background crawler with incremental re-indexing
 - Native file watching for created, modified, and deleted files
-- Hardware throttling to pause indexing during user activity or high CPU load
+- Hardware throttling that pauses for high CPU pressure or explicit user pause, without blocking the initial crawl during normal activity
 - Local-only configuration and index storage
 
 ## Install notes
 
 ### Windows
 
-Download and run `FindAnything-Setup-1.0.0-x64.exe`.
+Download and run `FindAnything-Setup-1.1.0-x64.exe`.
 
 ### macOS
 

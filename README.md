@@ -13,19 +13,20 @@ FindAnything indexes the **names and entire contents** of your documents and ret
 | Capability | Details |
 |---|---|
 | **Instant search** | 40 ms keystroke debounce; sub-millisecond FTS5 queries (measured avg ~1.5 ms over 2,000 documents) |
-| **Deep content indexing** | Full text extraction from `.txt`, `.md`, `.csv`, `.pdf`, `.docx`, `.xlsx` (plus `.log`, `.tsv`, `.xls`, `.xlsm`) |
+| **Deep content indexing** | Full text extraction from `.txt`, `.md`, `.csv`, `.pdf`, `.docx`, `.xlsx`, `.pptx`, HTML/XML/JSON, logs, and common source-code/configuration files |
 | **Google Desktop result layout** | Clickable title line → highlighted content snippet → metadata subscript (OS-native path, size, modified date) |
 | **Real-time watcher** | chokidar over native OS APIs (ReadDirectoryChangesW / FSEvents / inotify) — creations, edits and deletions appear instantly |
-| **Hardware throttling** | CPU load-average hysteresis + keyboard/mouse idle detection; the indexer pauses automatically so the computer never slows down |
+| **Hardware throttling** | CPU load-average hysteresis; normal keyboard/mouse activity no longer blocks the initial index, while high CPU pressure and manual pause remain respected |
 | **Privacy-first** | Everything — config, index database, extracted text — stays strictly on the local machine |
 | **Permission gating** | First-launch modal requires explicit authorization before anything is scanned |
-| **Safety ceilings** | Files over 50 MB are skipped for content (names still indexed); corrupt files can never crash the app |
+| **Safety ceilings** | Files over 50 MB are skipped for content (names still indexed); corrupt files can never crash the app; extracted text is capped at 2 million characters |
 
 ## Tech Stack
 
 - **Electron 35** (Node.js + Chromium), plain JavaScript
 - **better-sqlite3** with the **FTS5** extension (unicode61 tokenizer, BM25 ranking, `snippet()` highlighting)
 - **pdfjs-dist** (Mozilla PDF.js) for PDF text, **mammoth** for DOCX, **SheetJS/xlsx** for Excel
+- **JSZip** for cross-platform PowerPoint Open XML slide extraction
 - **chokidar** for native file watching
 - **electron-builder** for Windows (NSIS `.exe`) and macOS (`.dmg` / `.zip`, x64 + arm64) packaging
 
@@ -80,9 +81,11 @@ Verified results:
 
 - **Phase 1** — permission persistence, directory config JSON, dedupe/normalization
 - **Phase 2** — FTS5 CRUD, prefix search, snippet markers, BM25 ranking, 2,000-doc bulk insert at 0.10 ms/doc, average query latency **1.5 ms**
-- **Phase 3** — unique marker words recovered from real PDF, DOCX, XLSX, TXT, MD, CSV binaries; corrupt PDF handled gracefully; 51 MB file stopped by the size ceiling
+- **Phase 3** — unique marker words recovered from real PDF, DOCX, XLSX, TXT, MD, CSV, HTML, JSON, TypeScript, and PPTX content; corrupt PDF handled gracefully; 51 MB file stopped by the size ceiling
 - **Phase 4** — initial crawl, incremental skip of unchanged files, real-time add/change/unlink watcher events, CPU-hysteresis throttling, manual pause/resume
-- **Phase 5 (E2E)** — permission modal → grant flow → live indexing → result layout (title/highlighted snippet/metadata) → debounce collapses 10 rapid keystrokes into 1 query → `shell.openPath` IPC round-trip
+- **Phase 5 (E2E)** — permission modal → grant flow → live indexing → result layout (title/highlighted snippet/metadata) → debounce collapses 10 rapid keystrokes into 1 query → bounded file-open IPC round-trip
+
+The production hardening suite also verifies punctuation-normalized queries such as `variable-cycle engine`, which match the words inside the document instead of treating the hyphenated phrase as an impossible literal FTS token.
 
 ## Building Installers
 

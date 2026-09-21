@@ -1,7 +1,7 @@
 {
   "name": "findanything",
   "productName": "FindAnything",
-  "version": "1.0.1",
+  "version": "1.1.0",
   "description": "FindAnything - Super Google Desktop. Instant deep-content local file search engine for Windows and macOS.",
   "main": "src/main/main.js",
   "author": {
@@ -29,18 +29,21 @@
   "dependencies": {
     "better-sqlite3": "^11.10.0",
     "chokidar": "^3.6.0",
+    "jszip": "^3.10.2",
     "mammoth": "^1.8.0",
     "pdf-parse": "^1.1.1",
     "pdfjs-dist": "^3.11.174",
     "xlsx": "^0.18.5"
   },
   "devDependencies": {
-    "dmg-license": "^1.0.11",
     "docx": "^9.7.1",
     "electron": "^35.1.5",
     "electron-builder": "^25.1.8",
     "pdf-lib": "^1.17.1",
     "ws": "^8.21.3"
+  },
+  "optionalDependencies": {
+    "dmg-license": "^1.0.11"
   },
   "build": {
     "appId": "com.findanything.app",

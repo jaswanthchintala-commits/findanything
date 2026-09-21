@@ -6,8 +6,11 @@
  */
 
 const path = require('path');
+const fs = require('fs');
+const os = require('os');
 const assert = require('assert');
 const Extractor = require('../../src/main/extractor');
+const JSZip = require('jszip');
 
 const FIXTURE_DIR = path.join(__dirname, '..', 'fixtures');
 
@@ -37,6 +40,26 @@ async function main() {
     );
     console.log(`  ${c.file}: extracted ${res.content.length} chars, markers found`);
   }
+
+  // Additional cross-platform formats introduced for production coverage.
+  const extraDir = fs.mkdtempSync(path.join(os.tmpdir(), 'fa-extra-'));
+  fs.writeFileSync(path.join(extraDir, 'page.html'), '<html><body>HTMLDEEPSEARCH marker</body></html>');
+  fs.writeFileSync(path.join(extraDir, 'config.json'), '{"needle":"JSONDEEPSEARCH"}');
+  fs.writeFileSync(path.join(extraDir, 'source.ts'), 'const marker = "SOURCEDEEPSEARCH";');
+  for (const [name, marker] of [['page.html', 'HTMLDEEPSEARCH'], ['config.json', 'JSONDEEPSEARCH'], ['source.ts', 'SOURCEDEEPSEARCH']]) {
+    const res = await extractor.extract(path.join(extraDir, name));
+    assert.strictEqual(res.skipped, false, `${name} must be searchable`);
+    assert.ok(res.content.includes(marker), `${name} marker must be extracted`);
+  }
+  const pptx = new JSZip();
+  pptx.file('ppt/slides/slide1.xml', '<p:sld><a:t>SLIDEDEEPSEARCH</a:t></p:sld>');
+  const pptxPath = path.join(extraDir, 'deck.pptx');
+  fs.writeFileSync(pptxPath, await pptx.generateAsync({ type: 'nodebuffer' }));
+  const pptxResult = await extractor.extract(pptxPath);
+  assert.strictEqual(pptxResult.skipped, false, 'pptx must be searchable');
+  assert.ok(pptxResult.content.includes('SLIDEDEEPSEARCH'), 'pptx marker must be extracted');
+  fs.rmSync(extraDir, { recursive: true, force: true });
+  console.log('  html/json/typescript/pptx: deep text extracted');
 
   // Corrupt PDF must be handled gracefully, never crash.
   const corrupt = await extractor.extract(path.join(FIXTURE_DIR, 'corrupt.pdf'));

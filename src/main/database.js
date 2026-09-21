@@ -181,6 +181,9 @@ class Database {
 
   getStats() {
     const { n } = this._stmts.countFiles.get();
+    const { n: contentFileCount } = this.db
+      .prepare("SELECT COUNT(*) AS n FROM files WHERE status = 'ok' AND length(content) > 0")
+      .get();
     let dbSizeBytes = 0;
     try {
       dbSizeBytes = fs.statSync(this.dbPath).size;
@@ -189,7 +192,7 @@ class Database {
     } catch (_) {
       /* ignore */
     }
-    return { fileCount: n, dbSizeBytes };
+    return { fileCount: n, contentFileCount, dbSizeBytes };
   }
 
   /** Merge FTS index segments — keeps queries sub-millisecond as data grows. */
@@ -250,22 +253,21 @@ function fallbackSnippet(rowId, query, db) {
 
 /**
  * Translate raw user input into a safe FTS5 MATCH expression.
- * Each whitespace-separated term becomes a prefix token ("term"*), joined
- * with AND so every term must match. Special MATCH syntax characters are
- * stripped to guarantee user input can never break the query parser.
+ * FTS5 tokenizes punctuation and hyphens as word boundaries, so the query
+ * builder must do the same. The previous implementation quoted the entire
+ * whitespace token; a search such as "variable-cycle engine" then asked FTS5
+ * for a literal token that could never exist and returned no results.
+ * Every normalized token is a prefix term joined with AND, which supports
+ * natural partial-word searching while keeping raw MATCH syntax disabled.
  */
 function buildMatchQuery(query) {
   if (!query || typeof query !== 'string') return null;
-  const terms = query
-    .replace(/["'*()^:{}[\]]/g, ' ')
-    .split(/\s+/)
-    .map((t) => t.trim())
-    .filter((t) => t.length > 0)
-    .slice(0, 12); // safety ceiling on term count
+  const terms = query.match(/[\p{L}\p{N}_]+/gu) || [];
+  const unique = [...new Set(terms.map((t) => t.trim()).filter(Boolean))].slice(0, 16);
 
-  if (terms.length === 0) return null;
+  if (unique.length === 0) return null;
 
-  return terms.map((t) => `"${t}"*`).join(' AND ');
+  return unique.map((t) => `"${t.replace(/"/g, '""')}"*`).join(' AND ');
 }
 
 module.exports = Database;

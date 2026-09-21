@@ -112,7 +112,8 @@
     const stats = await api.getIndexStats();
     if (stats.ok && stats.data.db) {
       els.settingsStats.innerHTML =
-        `Indexed files: <strong>${stats.data.db.fileCount.toLocaleString()}</strong><br>` +
+        `Files indexed: <strong>${stats.data.db.fileCount.toLocaleString()}</strong><br>` +
+        `Files with searchable text: <strong>${(stats.data.db.contentFileCount || 0).toLocaleString()}</strong><br>` +
         `Index database size: <strong>${formatSize(stats.data.db.dbSizeBytes)}</strong><br>` +
         `Indexer state: <strong>${stats.data.indexer ? stats.data.indexer.state : 'idle'}</strong>`;
     }
@@ -373,6 +374,9 @@
     }
     const { db, indexer } = res.data;
     let text = `${db.fileCount.toLocaleString()} files indexed`;
+    if (db.contentFileCount != null) {
+      text += ` · ${db.contentFileCount.toLocaleString()} with searchable text`;
+    }
     if (indexer && indexer.state === 'crawling') {
       text += ` · scanning… ${indexer.processedThisRun.toLocaleString()} processed`;
     } else if (indexer && indexer.state === 'paused') {

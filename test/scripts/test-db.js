@@ -46,6 +46,18 @@ assert.ok(/«indexes»/.test(results[0].snippet), 'matched term must be wrapped 
 results = db.search('findany');
 assert.strictEqual(results.length, 1, 'prefix query must match FindAnything');
 
+// ---------- 4.1 Real-world punctuation and hyphenated content ----------
+db.upsertFile(Object.assign({}, rec, {
+  path: path.join(tmp, 'propulsion.txt'),
+  fileName: 'propulsion.txt',
+  content: 'The propulsion system uses a variable-cycle engine for efficient flight.'
+}));
+assert.strictEqual(db.search('variable-cycle engine').length, 1,
+  'hyphenated multi-word content must be searchable');
+assert.strictEqual(db.search('variable cycle').length, 1,
+  'punctuation-normalized terms must be searchable');
+db.deleteFile(path.join(tmp, 'propulsion.txt'));
+
 // ---------- 4. File-name search ----------
 results = db.search('notes');
 assert.strictEqual(results.length, 1, 'file name query must match');
@@ -71,6 +83,7 @@ assert.strictEqual(buildMatchQuery('***'), null);
 assert.strictEqual(buildMatchQuery('hello'), '"hello"*');
 assert.strictEqual(buildMatchQuery('hello world'), '"hello"* AND "world"*');
 assert.strictEqual(buildMatchQuery('we"ird*query'), '"we"* AND "ird"* AND "query"*');
+assert.strictEqual(buildMatchQuery('variable-cycle engine'), '"variable"* AND "cycle"* AND "engine"*');
 
 // ---------- 8. Bulk insert + sub-millisecond query performance ----------
 const BULK = 2000;
