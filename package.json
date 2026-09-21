@@ -1,7 +1,7 @@
 {
   "name": "findanything",
   "productName": "FindAnything",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "FindAnything - Super Google Desktop. Instant deep-content local file search engine for Windows and macOS.",
   "main": "src/main/main.js",
   "author": {

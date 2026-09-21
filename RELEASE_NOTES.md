@@ -1,4 +1,4 @@
-# FindAnything v1.0.0
+# FindAnything v1.0.1
 
 FindAnything is a modern desktop indexing and search application inspired by the classic Google Desktop experience. It indexes file names and deep document content locally so users can search their own files instantly.
 
@@ -11,6 +11,8 @@ FindAnything is a modern desktop indexing and search application inspired by the
 | macOS Apple Silicon | `FindAnything-1.0.0-arm64.zip` |
 
 ## Included in this release
+
+- Fixed an indexing deadlock where normal keyboard/mouse activity paused the initial crawl indefinitely, leaving the search index empty for active users
 
 - Instant local search with a lightweight debounced search box
 - Deep-content indexing for TXT, Markdown, CSV, PDF, DOCX, and XLSX files
